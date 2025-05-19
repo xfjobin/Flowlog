@@ -25,6 +25,7 @@ function calcDuration(start: string, end: string, deductLunch = false): number {
   if (!start || !end) return 0;
   const [sh, sm] = start.split(":").map(Number);
   const [eh, em] = end.split(":").map(Number);
+  // eslint-disable-next-line prefer-const
   let minutes = eh * 60 + em - (sh * 60 + sm);
   if (deductLunch && sh <= 12 && eh >= 12) minutes -= 30;
   return Math.max(0, minutes);

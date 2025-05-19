@@ -1,14 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Space_Grotesk } from "next/font/google";
-import AuthSidebarButton from "./components/AuthSidebarButton";
 import SidebarNav from "./components/SidebarNav";
 import ClientSessionProvider from "./components/ClientSessionProvider";
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space-grotesk",
-});
 
 export const metadata: Metadata = {
   title: "Flowlog",
