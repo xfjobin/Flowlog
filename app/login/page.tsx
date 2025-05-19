@@ -1,64 +1,77 @@
+// app/login/page.tsx
 'use client';
 
 import { useState } from 'react';
-import { loginUser } from '../actions/login';
+import { signIn } from 'next-auth/react';         // <-- Use NextAuth
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
+  const [error, setError] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg('');
+    setError('');
 
-    const res = await loginUser(email, password);
+    // Call NextAuth signIn with credentials
+    const res = await signIn('credentials', {
+      redirect: false,
+      email,
+      password,
+    });
 
-    if (!res.success) {
-      setErrorMsg(res.error || 'Login failed');
+    if (res?.error) {
+      setError(res.error || 'Login failed');
       return;
     }
 
-    router.push('/work'); // or your dashboard
+    // On success, redirect to /work
+    router.push('/work');
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-zinc-900 text-white">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-zinc-800 p-8 rounded-xl w-full max-w-sm shadow-lg"
-      >
-        <h1 className="text-2xl font-bold mb-4">Login to Flowlog</h1>
-
-        <label className="block mb-2 text-sm font-medium">Email</label>
-        <input
-          type="email"
-          value={email}
-          required
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-2 mb-4 rounded bg-zinc-700 text-white border border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-500"
-        />
-
-        <label className="block mb-2 text-sm font-medium">Password</label>
-        <input
-          type="password"
-          value={password}
-          required
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 mb-4 rounded bg-zinc-700 text-white border border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-500"
-        />
-
-        {errorMsg && <p className="text-red-400 text-sm mb-2">{errorMsg}</p>}
-
+    <div className="max-w-md mx-auto mt-10 bg-white rounded-xl shadow-lg p-8 text-zinc-900">
+      <h1 className="text-3xl font-bold mb-6 text-zinc-900">Login</h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <label className="text-sm font-semibold text-zinc-700">
+          Email
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+            className="mt-1 w-full border border-zinc-300 rounded px-3 py-2 bg-zinc-50 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400"
+          />
+        </label>
+        <label className="text-sm font-semibold text-zinc-700">
+          Password
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            className="mt-1 w-full border border-zinc-300 rounded px-3 py-2 bg-zinc-50 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400"
+          />
+        </label>
+        {error && <p className="text-red-600 text-sm">{error}</p>}
         <button
           type="submit"
-          className="w-full bg-zinc-600 hover:bg-zinc-500 text-white font-medium py-2 px-4 rounded"
+          className="mt-2 bg-zinc-900 text-white py-2 rounded font-semibold hover:bg-zinc-800 transition"
         >
           Login
         </button>
       </form>
-    </main>
+      <button
+        type="button"
+        className="mt-4 w-full border border-zinc-300 text-zinc-900 py-2 rounded font-semibold hover:bg-zinc-100 transition"
+        onClick={() => router.push('/register')}
+      >
+        Register
+      </button>
+    </div>
   );
 }
