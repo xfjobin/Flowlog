@@ -25,7 +25,6 @@ function calcDuration(start: string, end: string, deductLunch = false): number {
   if (!start || !end) return 0;
   const [sh, sm] = start.split(":").map(Number);
   const [eh, em] = end.split(":").map(Number);
-  // eslint-disable-next-line prefer-const
   let minutes = eh * 60 + em - (sh * 60 + sm);
   if (deductLunch && sh <= 12 && eh >= 12) minutes -= 30;
   return Math.max(0, minutes);
@@ -50,7 +49,7 @@ function generateHourMinuteOptions() {
   for (let h = 1; h <= 12; h++) {
     for (let m = 0; m < 60; m += 15) {
       const hour = String(h);
-      const minute = String(m).padStart(2, "0");
+      const minute = String(m).padStart(2, "0"); // use const here
       const label = `${hour}:${minute}`;
       const value = `${String(h).padStart(2, "0")}:${minute}`;
       options.push(
@@ -211,7 +210,7 @@ export default function ClientWorkPage() {
     });
 
     doc.setFontSize(12);
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const y =
       (doc as any).lastAutoTable && (doc as any).lastAutoTable.finalY
         ? (doc as any).lastAutoTable.finalY + 10
