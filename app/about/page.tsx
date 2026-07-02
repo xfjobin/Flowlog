@@ -1,9 +1,7 @@
-import { getCurrentUserId } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requireAuth } from "@/lib/require-auth";
 import ClientAboutPage from "./ClientAboutPage";
 
 export default async function AboutPage() {
-  const userId = await getCurrentUserId();
-  if (!userId) redirect("/login");
+  await requireAuth();
   return <ClientAboutPage />;
 }
