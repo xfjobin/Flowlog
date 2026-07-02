@@ -1,4 +1,4 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
@@ -35,10 +35,8 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
 
-  // === Callbacks ===
   callbacks: {
     async jwt({ token, user }) {
-      // Add user info to token at login
       if (user) {
         token.id = user.id;
         token.email = user.email;
@@ -47,7 +45,6 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      // Add token info to session for client access
       if (token) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
@@ -57,6 +54,3 @@ export const authOptions: NextAuthOptions = {
     },
   },
 };
-
-const handler = NextAuth(authOptions);
-export { handler as GET, handler as POST };
