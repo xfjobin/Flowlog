@@ -72,12 +72,24 @@ function parseDateSafe(d: string): Date {
   }
 }
 
+function isWorkEntry(v: unknown): v is WorkEntry {
+  if (typeof v !== "object" || v === null) return false;
+  const o = v as Record<string, unknown>;
+  return (
+    typeof o.date === "string" &&
+    typeof o.amStart === "string" &&
+    typeof o.workStart === "string" &&
+    typeof o.workEnd === "string" &&
+    typeof o.pmEnd === "string"
+  );
+}
+
 function safeParseEntries(json: string | null): WorkEntry[] {
   if (!json) return [];
   try {
     const parsed = JSON.parse(json);
     if (!Array.isArray(parsed)) return [];
-    return parsed;
+    return parsed.filter(isWorkEntry);
   } catch {
     return [];
   }
