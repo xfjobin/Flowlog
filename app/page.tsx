@@ -1,9 +1,9 @@
-import { getCurrentUserId } from '@/lib/auth';
-import Link from 'next/link';
-
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import Link from "next/link";
 
 export default async function Home() {
-  const userId = await getCurrentUserId();
+  const session = await getServerSession(authOptions);
 
   return (
     <main className="min-h-screen bg-zinc-100 text-zinc-900 p-8 flex flex-col items-center justify-center">
@@ -12,7 +12,7 @@ export default async function Home() {
         Your personal productivity hub — clean, simple, expandable.
       </p>
 
-      {userId ? (
+      {session ? (
         <form action="/logout" method="post">
           <button
             type="submit"

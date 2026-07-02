@@ -1,9 +1,7 @@
-import { getCurrentUserId } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requireAuth } from "@/lib/require-auth";
 import ClientSleepPage from "./ClientSleepPage";
 
 export default async function SleepPage() {
-  const userId = await getCurrentUserId();
-  if (!userId) redirect("/login");
+  await requireAuth();
   return <ClientSleepPage />;
 }
