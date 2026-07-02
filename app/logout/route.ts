@@ -1,13 +1,10 @@
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 export async function POST() {
-  const cookieStore = await cookies(); // ✅ await this
+  const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const callbackUrl = new URL("/login", baseUrl).toString();
+  const signOutUrl = new URL(`/api/auth/signout`, baseUrl);
+  signOutUrl.searchParams.set("callbackUrl", callbackUrl);
 
-  cookieStore.set('user_session', '', {
-    path: '/',
-    maxAge: 0, // expires the cookie immediately
-  });
-
-  return NextResponse.redirect(new URL('/', process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'));
+  return NextResponse.redirect(signOutUrl.toString(), { status: 303 });
 }
