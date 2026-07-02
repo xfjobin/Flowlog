@@ -4,7 +4,14 @@ import { useState, useEffect } from "react";
 import { CalendarDays } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { startOfWeek, endOfWeek, format, parseISO } from "date-fns";
+import { startOfWeek, endOfWeek, format } from "date-fns";
+import {
+  padTime,
+  calcDuration,
+  formatMins,
+  to24HourFormat,
+  parseDateSafe,
+} from "@/lib/workUtils";
 
 // --- Types & Helpers ---
 type WorkEntry = {
@@ -14,35 +21,6 @@ type WorkEntry = {
   workEnd: string;
   pmEnd: string;
 };
-
-function padTime(time: string) {
-  if (!time || !time.includes(":")) return "--";
-  const [h, m] = time.split(":").map((n) => String(n).padStart(2, "0"));
-  return `${h}:${m}`;
-}
-
-function calcDuration(start: string, end: string, deductLunch = false): number {
-  if (!start || !end) return 0;
-  const [sh, sm] = start.split(":").map(Number);
-  const [eh, em] = end.split(":").map(Number);
-  let minutes = eh * 60 + em - (sh * 60 + sm);
-  if (deductLunch && sh <= 12 && eh >= 12) minutes -= 30;
-  return Math.max(0, minutes);
-}
-
-function formatMins(mins: number) {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return `${h}h ${m}m`;
-}
-
-function to24HourFormat(time: string, period: string) {
-  if (!time) return "";
-  let [hour, minute] = time.split(":").map(Number);
-  if (period === "PM" && hour < 12) hour += 12;
-  if (period === "AM" && hour === 12) hour = 0;
-  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-}
 
 function generateHourMinuteOptions() {
   const options = [];
@@ -60,16 +38,6 @@ function generateHourMinuteOptions() {
     }
   }
   return options;
-}
-
-function parseDateSafe(d: string): Date {
-  try {
-    const iso = parseISO(d);
-    if (!isNaN(iso.getTime())) return iso;
-    return new Date(d);
-  } catch {
-    return new Date(d);
-  }
 }
 
 // --- Component ---
