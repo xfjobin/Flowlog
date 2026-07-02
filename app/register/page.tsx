@@ -16,15 +16,19 @@ export default function RegisterPage() {
     setErrorMsg('');
     setSuccessMsg('');
 
-    const res = await registerUser(email, password);
+    try {
+      const res = await registerUser(email, password);
 
-    if (!res.success) {
-      setErrorMsg(res.error || 'Registration failed.');
-      return;
+      if (!res.success) {
+        setErrorMsg(res.error || 'Registration failed.');
+        return;
+      }
+
+      setSuccessMsg('Account created! Redirecting...');
+      setTimeout(() => router.push('/login'), 1500);
+    } catch {
+      setErrorMsg('A network error occurred. Please check your connection and try again.');
     }
-
-    setSuccessMsg('Account created! Redirecting...');
-    setTimeout(() => router.push('/login'), 1500);
   };
 
   return (
