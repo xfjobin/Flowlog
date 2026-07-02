@@ -6,6 +6,12 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { startOfWeek, endOfWeek, format, parseISO } from "date-fns";
 
+declare module "jspdf" {
+  interface jsPDF {
+    lastAutoTable?: { finalY: number };
+  }
+}
+
 // --- Types & Helpers ---
 type WorkEntry = {
   date: string;
@@ -21,12 +27,21 @@ function padTime(time: string) {
   return `${h}:${m}`;
 }
 
+const NOON_MINUTES = 12 * 60;
+
+function toMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function crossesNoon(start: string, end: string): boolean {
+  return toMinutes(start) < NOON_MINUTES && toMinutes(end) > NOON_MINUTES;
+}
+
 function calcDuration(start: string, end: string, deductLunch = false): number {
   if (!start || !end) return 0;
-  const [sh, sm] = start.split(":").map(Number);
-  const [eh, em] = end.split(":").map(Number);
-  let minutes = eh * 60 + em - (sh * 60 + sm);
-  if (deductLunch && sh <= 12 && eh >= 12) minutes -= 30;
+  let minutes = toMinutes(end) - toMinutes(start);
+  if (deductLunch && crossesNoon(start, end)) minutes -= 30;
   return Math.max(0, minutes);
 }
 
@@ -38,7 +53,8 @@ function formatMins(mins: number) {
 
 function to24HourFormat(time: string, period: string) {
   if (!time) return "";
-  let [hour, minute] = time.split(":").map(Number);
+  const [rawHour, minute] = time.split(":").map(Number);
+  let hour = rawHour;
   if (period === "PM" && hour < 12) hour += 12;
   if (period === "AM" && hour === 12) hour = 0;
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
@@ -49,7 +65,7 @@ function generateHourMinuteOptions() {
   for (let h = 1; h <= 12; h++) {
     for (let m = 0; m < 60; m += 15) {
       const hour = String(h);
-      const minute = String(m).padStart(2, "0"); // use const here
+      const minute = String(m).padStart(2, "0");
       const label = `${hour}:${minute}`;
       const value = `${String(h).padStart(2, "0")}:${minute}`;
       options.push(
@@ -87,6 +103,7 @@ export default function ClientWorkPage() {
   const [workEndPeriod, setWorkEndPeriod] = useState("PM");
   const [pmTime, setPmTime] = useState("");
   const [pmPeriod, setPmPeriod] = useState("PM");
+  const [formError, setFormError] = useState("");
 
   // --- Effect: Load Entries ---
   useEffect(() => {
@@ -117,22 +134,36 @@ export default function ClientWorkPage() {
     const mins = calcDuration(start, end, true);
     return (
       formatMins(mins) +
-      (mins !== 0
-        ? start <= "12:00" && end >= "12:00"
-          ? " (-30m lunch deducted)"
-          : ""
-        : "")
+      (mins !== 0 && crossesNoon(start, end) ? " (-30m lunch deducted)" : "")
     );
   })();
 
   // --- Form Submit Handler ---
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError("");
+
+    if (!workDate) {
+      setFormError("Please select a date.");
+      return;
+    }
+    if (!workStartTime || !workEndTime) {
+      setFormError("Please select both a work start and work end time.");
+      return;
+    }
+
+    const workStart = to24HourFormat(workStartTime, workStartPeriod);
+    const workEnd = to24HourFormat(workEndTime, workEndPeriod);
+    if (toMinutes(workEnd) <= toMinutes(workStart)) {
+      setFormError("Work end time must be after work start time.");
+      return;
+    }
+
     const newEntry: WorkEntry = {
       date: workDate,
       amStart: to24HourFormat(amTime, amPeriod),
-      workStart: to24HourFormat(workStartTime, workStartPeriod),
-      workEnd: to24HourFormat(workEndTime, workEndPeriod),
+      workStart,
+      workEnd,
       pmEnd: to24HourFormat(pmTime, pmPeriod),
     };
     const saved = localStorage.getItem("workEntries");
@@ -210,11 +241,7 @@ export default function ClientWorkPage() {
     });
 
     doc.setFontSize(12);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const y =
-      (doc as any).lastAutoTable && (doc as any).lastAutoTable.finalY
-        ? (doc as any).lastAutoTable.finalY + 10
-        : 40;
+    const y = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : 40;
 
     doc.text(
       `Total Work: ${formatMins(totalWork)}    |    Total Travel: ${formatMins(
@@ -399,6 +426,7 @@ export default function ClientWorkPage() {
         </div>
 
         {/* Save */}
+        {formError && <p className="text-red-600 text-sm">{formError}</p>}
         <button
           type="submit"
           className="w-full bg-zinc-800 text-white py-2 px-4 rounded-md hover:bg-zinc-700 transition"

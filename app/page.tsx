@@ -1,5 +1,6 @@
 import { getCurrentUserId } from '@/lib/auth';
 import Link from 'next/link';
+import LogoutButton from './components/LogoutButton';
 
 
 export default async function Home() {
@@ -13,14 +14,7 @@ export default async function Home() {
       </p>
 
       {userId ? (
-        <form action="/logout" method="post">
-          <button
-            type="submit"
-            className="px-6 py-2 rounded-md bg-red-600 text-white hover:bg-red-500 transition"
-          >
-            Logout
-          </button>
-        </form>
+        <LogoutButton />
       ) : (
         <Link
           href="/login"
