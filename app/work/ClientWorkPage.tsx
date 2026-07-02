@@ -72,6 +72,17 @@ function parseDateSafe(d: string): Date {
   }
 }
 
+function safeParseEntries(json: string | null): WorkEntry[] {
+  if (!json) return [];
+  try {
+    const parsed = JSON.parse(json);
+    if (!Array.isArray(parsed)) return [];
+    return parsed;
+  } catch {
+    return [];
+  }
+}
+
 // --- Component ---
 export default function ClientWorkPage() {
   // --- State ---
@@ -90,10 +101,7 @@ export default function ClientWorkPage() {
 
   // --- Effect: Load Entries ---
   useEffect(() => {
-    const saved = localStorage.getItem("workEntries");
-    if (saved) {
-      setEntries(JSON.parse(saved));
-    }
+    setEntries(safeParseEntries(localStorage.getItem("workEntries")));
     setMounted(true);
   }, []);
 
@@ -135,8 +143,7 @@ export default function ClientWorkPage() {
       workEnd: to24HourFormat(workEndTime, workEndPeriod),
       pmEnd: to24HourFormat(pmTime, pmPeriod),
     };
-    const saved = localStorage.getItem("workEntries");
-    const current: WorkEntry[] = saved ? JSON.parse(saved) : [];
+    const current = safeParseEntries(localStorage.getItem("workEntries"));
     const updated = [...current, newEntry];
     localStorage.setItem("workEntries", JSON.stringify(updated));
     setEntries(updated);
@@ -145,8 +152,7 @@ export default function ClientWorkPage() {
 
   // --- PDF Download Handler ---
   const downloadWeeklyPDF = () => {
-    const saved = localStorage.getItem("workEntries");
-    const latestEntries: WorkEntry[] = saved ? JSON.parse(saved) : [];
+    const latestEntries = safeParseEntries(localStorage.getItem("workEntries"));
 
     // Show all entries (or filter by week if you like)
     const weekEntries = latestEntries;

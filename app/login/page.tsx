@@ -15,20 +15,22 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    // Call NextAuth signIn with credentials
-    const res = await signIn('credentials', {
-      redirect: false,
-      email,
-      password,
-    });
+    try {
+      const res = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      });
 
-    if (res?.error) {
-      setError(res.error || 'Login failed');
-      return;
+      if (res?.error) {
+        setError('Invalid email or password.');
+        return;
+      }
+
+      router.push('/work');
+    } catch {
+      setError('A network error occurred. Please check your connection and try again.');
     }
-
-    // On success, redirect to /work
-    router.push('/work');
   };
 
   return (
